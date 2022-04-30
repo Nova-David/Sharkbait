@@ -16,81 +16,92 @@ import FriendsScreen from "../screens/FriendsScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import SearchScreen from "../screens/SearchScreen";
 import RequestsScreen from "../screens/RequestsScreen";
+import SocketTest from "../screens/SocketTest";
+import { useSelector } from "react-redux";
 
 const Stack = createNativeStackNavigator();
 const HomeStack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 
 const AppNavigation = (props) => {
+  const isLoggedIn = useSelector((state) => state.user.valid);
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
       }}
     >
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{
-          animation:
-            Platform.OS === ".." ? "slide_from_left" : "fade_from_bottom",
-        }}
-      />
-      <Stack.Screen
-        name="Register"
-        component={RegisterScreen}
-        options={{
-          animation:
-            Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
-        }}
-      />
-      <Stack.Screen
-        name="AppHome"
-        component={MainNavigation}
-        options={{
-          animation:
-            Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
-        }}
-      />
+      {!isLoggedIn ? (
+        <>
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{
+              animation:
+                Platform.OS === ".." ? "slide_from_left" : "fade_from_bottom",
+            }}
+          />
 
-      <Stack.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          animation:
-            Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
-        }}
-      />
+          <Stack.Screen
+            name="Register"
+            component={RegisterScreen}
+            options={{
+              animation:
+                Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
+            }}
+          />
+        </>
+      ) : (
+        <>
+          <Stack.Screen
+            name="AppHome"
+            component={MainNavigation}
+            options={{
+              animation:
+                Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
+            }}
+          />
 
-      <Stack.Screen
-        name="Messages"
-        component={MessagesScreen}
-        options={({ route }) => ({
-          animation:
-            Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
-          headerShown: false,
-        })}
-      />
+          <Stack.Screen
+            name="Profile"
+            component={ProfileScreen}
+            options={{
+              animation:
+                Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
+            }}
+          />
 
-      <Stack.Screen
-        name="Search"
-        component={SearchScreen}
-        options={({ route }) => ({
-          animation:
-            Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
-          headerShown: false,
-        })}
-      />
+          <Stack.Screen
+            name="Messages"
+            component={MessagesScreen}
+            options={({ route }) => ({
+              animation:
+                Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
+              headerShown: false,
+            })}
+          />
 
-<Stack.Screen
-        name="Requests"
-        component={RequestsScreen}
-        options={({ route }) => ({
-          animation:
-            Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
-          headerShown: false,
-        })}
-      />
+          <Stack.Screen
+            name="Search"
+            component={SearchScreen}
+            options={({ route }) => ({
+              animation:
+                Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
+              headerShown: false,
+            })}
+          />
+
+          <Stack.Screen
+            name="Requests"
+            component={RequestsScreen}
+            options={({ route }) => ({
+              animation:
+                Platform.OS === ".." ? "slide_from_right" : "fade_from_bottom",
+              headerShown: false,
+            })}
+          />
+        </>
+      )}
     </Stack.Navigator>
   );
 };

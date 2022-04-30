@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, memo, useState } from "react";
+import React, { useEffect, memo } from "react";
 import {
   View,
   Image,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
 } from "react-native";
+import moment from "moment";
 
 import { Text } from "./Comp";
 import Theme from "../const/Colors";
@@ -14,7 +15,8 @@ import Avatar from "./Avatar";
 import { useSelector } from "react-redux";
 
 const Chat = (props) => {
-  const uid = useSelector((state) => state.user.value);
+  const chat = useSelector((state) => state.user.chats[props.chat]);
+
   const scaleRange = [
     -1,
     0,
@@ -39,19 +41,39 @@ const Chat = (props) => {
     outputRange: [1, 1, 1, 0],
   });
 
-  // useEffect(() => {
-  //   Animated.timing(opacity, {toValue: 1, useNativeDriver: true}).start();
-  //   Animated.timing(scale, {toValue: 1, useNativeDriver: true}).start();
-  // }, []);
+  if (!chat || !chat.chat_id) {
+    return (
+      <View onStartShouldSetResponder={() => true}>
+        <TouchableOpacity activeOpacity={0.9} onPress={() => {}}>
+          <Animated.View
+            style={[styles.chat, { transform: [{ scale }], opacity: opacity }]}
+          >
+            <Avatar />
+            <View style={styles.content}>
+              <View style={styles.header}>
+                <Text style={styles.name}>...</Text>
+              </View>
+              <Text style={styles.msg} numberOfLines={2}>
+                ...
+              </Text>
+            </View>
+          </Animated.View>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
-  const chatInfo = props.data;
+  const title = chat.title
+    ? chat.title
+    : chat.members.map((member) => member.displayname).join(", ");
 
   const chatPressHandler = () => {
     props.navigation.closeDrawer();
 
     props.navigation.navigate("Messages", {
-      chat_id: chatInfo.chat_id,
-      name: chatInfo.members[0].displayname,
+      chat_id: chat.chat_id,
+      name: title,
+      members: chat.members,
     });
   };
 
@@ -67,11 +89,11 @@ const Chat = (props) => {
           <Avatar />
           <View style={styles.content}>
             <View style={styles.header}>
-              <Text style={styles.name}>{chatInfo.members[0].displayname}</Text>
-              {/* <Text style={styles.time}>{props.time}</Text> */}
+              <Text style={styles.name} numberOfLines={1}>{title}</Text>
+              <Text style={styles.time}>{moment(chat.last_update).fromNow()}</Text>
             </View>
             <Text style={styles.msg} numberOfLines={2}>
-              {(chatInfo.msg) ? chatInfo.msg : "(No messages yet)"}
+              {chat.msg ? chat.msg : "(No messages yet)"}
             </Text>
           </View>
         </Animated.View>
@@ -111,6 +133,8 @@ const styles = StyleSheet.create({
     color: Theme.darker,
     fontWeight: "bold",
     fontStyle: "italic",
+    flex: 1,
+    marginRight: 10,
   },
 
   time: {

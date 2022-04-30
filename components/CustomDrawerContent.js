@@ -3,6 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../store/userReducer";
+import { eraseChats } from "../store/chatsReducer";
 import Icon from "react-native-vector-icons/AntDesign";
 
 import { Text } from "./Comp";
@@ -31,39 +32,21 @@ const DrawerItem = (props) => {
 };
 
 const CustomDrawerContent = (props) => {
-  const [userInfo, setUserInfo] = useState({
-    loaded: false,
-    displayname: '...'
-  });
-
   const dispatch = useDispatch();
-  const uid = useSelector((state) => state.user.value);
+  const user = useSelector((state) => state.user.data);
 
   const logoutHandler = () => {
     /* Logout */
+    dispatch(eraseChats());
     dispatch(logout());
   };
-
-  useEffect(() => {
-    if (uid == null) props.navigation.replace("Login");
-  }, [uid]);
-
-  useEffect(() => {
-    fetch("http://api.sharkbait-app.ml/users/" + uid).then(json => {
-      return json.json();
-    }).then(response => {
-      if (!response.error) {
-        setUserInfo(response);
-      }
-    });
-  }, [])
 
   return (
     <DrawerContentScrollView {...props} style={styles.drawerContainer}>
       <View style={styles.drawer}>
         <Avatar style={styles.avatar} />
-        <Text style={styles.displayname}>{userInfo.displayname}</Text>
-        <Text style={styles.uid}>@{uid}</Text>
+        <Text style={styles.displayname}>{user.displayname}</Text>
+        <Text style={styles.uid}>@{user.uid}</Text>
         <DrawerItem
           name="home"
           label="Home"
@@ -103,23 +86,6 @@ const CustomDrawerContent = (props) => {
           </View>
         </TouchableOpacity>
       </View>
-      {/* <DrawerItem
-        icon={(focused, color) => {
-          return <Icon name='home' size={50} color={Theme.white} />
-        }}
-        label="Settings"
-        labelStyle={styles.navText}
-        style={styles.navItem}
-        activeTintColor={Theme.red}
-        onPress={() => {
-          props.navigation.navigate("Settings");
-        }}
-      /> */}
-      {/* <DrawerItem
-        label="Logout"
-        style={styles.navItem}
-        onPress={logoutHandler}
-      /> */}
     </DrawerContentScrollView>
   );
 };

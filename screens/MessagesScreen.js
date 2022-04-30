@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useContext,
+} from "react";
 import { View, StyleSheet, TouchableOpacity, FlatList } from "react-native";
 import ChatTitle from "../components/ChatTitle";
 import { io } from "socket.io-client";
@@ -10,38 +16,27 @@ import Typing from "../components/Typing";
 import SafeArea from "../layouts/ChatLayout";
 import Theme from "../const/Colors";
 import Icon from "react-native-vector-icons/Feather";
+import { SocketContext } from "../socket/Socket";
 
 var timeout;
 
 const MessagesScreen = (props) => {
-  const [loaded, setLoaded] = useState(false);
   const [typing, setTyping] = useState(false);
   const [msg, setMsg] = useState("");
-  const [messages, setMessages] = useState([]);
-  const socketRef = useRef();
   const flatListRef = useRef();
-  const uid = useSelector((state) => state.user.value);
+  const { data: user } = useSelector(state => state.user);
+  const uid = user.uid;
   const chat = props.route.params;
-  const chatID = chat.chat_id;
-  const name = chat.name;
+  const loaded = useSelector((state) => state.chats.loaded[chat.chat_id]);
+  const messages = useSelector((state) => state.chats[chat.chat_id]);
+  const ctx = useContext(SocketContext);
 
   useEffect(() => {
-    const socket = io("http://sharkbait-app.ml");
+    /* Connect web socket to specific chat */
+    ctx.joinChat(chat.chat_id);
 
-    socket.on("connect", () => {
-      console.log(socket.id);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("disconnected");
-    });
-
-    socket.emit("getMessages", chatID, (response) => {
-      setMessages(response);
-      setLoaded(true);
-    });
-
-    socket.on("typing", (data) => {
+    ctx.socket.on("typing", (data) => {
+      /* Update a timeout when another user types */
       if (data.uid != uid) {
         setTyping(data.typing);
 
@@ -53,62 +48,48 @@ const MessagesScreen = (props) => {
       }
     });
 
-    socket.on("newMessage", (data) => {
-      if (data.uid != uid) addMessage(data.uid, data.msg);
-    });
-
-    socketRef.current = socket;
-
     return () => {
-      socket.removeAllListeners();
-      socket.disconnect();
+      /* Disconnect web socket from chat */
+      clearTimeout(timeout);
+      ctx.leaveChat(chat.chat_id);
     };
   }, []);
 
-  const addMessage = (id, msg) => {
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      {
-        uid: id,
-        msg: msg,
-      },
-    ]);
-  };
-
   const sendMessage = () => {
+    /* Handler for when the user sends a message to the chat */
     if (msg != "" && loaded) {
-      const sentMessage = msg;
-      socketRef.current.emit(
-        "sendMessage",
-        { chat_id: chatID, msg: sentMessage, uid: uid },
-        (response) => {
-          if (response.error) console.log(response);
-        }
-      );
-      addMessage(uid, sentMessage);
+      console.log("Ready to send message", msg);
+
+      const newMessage = {
+        chat_id: chat.chat_id,
+        msg: msg,
+        uid: uid,
+      };
+
+      ctx.sendMessage(newMessage, chat.members, user);
+
       sendTyping("");
     }
   };
 
   const sendTyping = (text) => {
-    if (text == "") {
-      socketRef.current.emit("typing", {
-        chat_id: chatID,
-        uid: uid,
-        typing: false,
-      });
-    } else {
-      socketRef.current.emit("typing", {
-        chat_id: chatID,
-        uid: uid,
-        typing: true,
-      });
+    /* Handler for when the user types in the chat */
+    let typingUpdate = {
+      chat_id: chat.chat_id,
+      uid: uid,
+      typing: false,
+    };
+    if (text == "") ctx.sendTyping(typingUpdate);
+    else {
+      typingUpdate.typing = true;
+      ctx.sendTyping(typingUpdate);
     }
 
     setMsg(text);
   };
 
   const group = useCallback(
+    /* Styles chat bubbles based on previous and next chat bubbles, to group together bubbles sent by the same user */
     (ind) => {
       let x = {};
 
@@ -137,7 +118,11 @@ const MessagesScreen = (props) => {
 
   return (
     <SafeArea>
-      <ChatTitle navigation={props.navigation} name={name} img={require("../assets/avatar.png")} />
+      <ChatTitle
+        navigation={props.navigation}
+        name={chat.name}
+        img={require("../assets/avatar.png")}
+      />
       <View style={styles.main}>
         <View onStartShouldSetResponder={() => true} style={{ flex: 1 }}>
           <FlatList
@@ -148,7 +133,7 @@ const MessagesScreen = (props) => {
             style={styles.messagesContainer}
             contentContainerStyle={styles.messages}
             keyExtractor={(item) => Math.random().toString()}
-            data={[...messages, { typing: typing }]}
+            data={messages ? [...messages, { typing: typing }] : []}
             renderItem={(itemData) => {
               if ("typing" in itemData.item) {
                 if (itemData.item.typing === true && loaded) {

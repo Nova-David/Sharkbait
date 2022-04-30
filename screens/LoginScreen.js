@@ -14,41 +14,20 @@ const LoginScreen = (props) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const dispatch = useDispatch();
-  const userState = useSelector((state) => state.user.value);
+  const user = useSelector((state) => state.user);
 
-  const errorHandler = () => {
-    setError(true);
-  };
-
-  const errorMsg = error ? <Text style={styles.warning}>Incorrect username/password</Text> : null;
+  const errorMsg = <Text style={styles.warning}>Incorrect username/password</Text>
 
   const loginHandler = () => {
     /* Login */
-    
-    if (username != "" && password != "") {
-      const data = {
-        uid: username,
-        password: password,
-      };
-
-      fetch("http://api.sharkbait-app.ml/verify", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      })
-        .then((json) => json.json())
-        .then((response) => {
-          if (response.valid) dispatch(login(username.toLowerCase()));
-          else errorHandler();
-        });
-    } else {
-      console.log("invalid login");
-    }
+    if (username != "" && password != "")
+      dispatch(login({ uid: username.toLowerCase(), password: password }));
   };
 
   useEffect(() => {
-    if (userState != null) props.navigation.replace("AppHome");
-  }, [userState]);
+    /* Invalid username/password */
+    if (user.valid != null) setError(true);
+  }, [user]);
 
   return (
     <SafeArea>
@@ -61,7 +40,10 @@ const LoginScreen = (props) => {
             placeholder="Username"
             animate={true}
             value={username}
-            onChangeText={text => {setUsername(text); setError(false)}}
+            onChangeText={(text) => {
+              setUsername(text);
+              setError(false);
+            }}
           />
           <Input
             style={styles.input}
@@ -69,10 +51,13 @@ const LoginScreen = (props) => {
             placeholder="Password"
             animate={true}
             value={password}
-            onChangeText={text => {setPassword(text); setError(false)}}
+            onChangeText={(text) => {
+              setPassword(text);
+              setError(false);
+            }}
           />
         </View>
-        {errorMsg}
+        {error ? errorMsg : null}
         <Button
           style={styles.loginButton}
           title="Login"
@@ -135,7 +120,7 @@ const styles = StyleSheet.create({
   warning: {
     color: Theme.red,
     fontSize: Size.small,
-  }
+  },
 });
 
 export default LoginScreen;

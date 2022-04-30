@@ -18,47 +18,38 @@ import Size from "../const/Sizes";
 
 const FriendsScreen = (props) => {
   const [search, setSearch] = useState("");
-  const [friends, setFriends] = useState({});
-  const [requests, setRequests] = useState({});
-  const [repeater, setRepeater] = useState(0);
-  const [userInfo, setUserInfo] = useState();
 
-  const uid = useSelector((state) => state.user.value);
-  
-  useEffect(() => {
-    fetch("http://api.sharkbait-app.ml/users/" + uid)
-      .then(json => json.json())
-      .then(response => {
-        setUserInfo(response);
-      })
-  }, [])
+  const { friends, requests } = useSelector((state) => state.user);
 
-  useEffect(() => {
-    console.log("...fetching", repeater);
-    fetch("http://api.sharkbait-app.ml/users/" + uid + "/friends")
-      .then((json) => {
-        return json.json();
-      })
-      .then((response) => {
-        setFriends(response.friends);
-        setRequests(response.requests);
-      });
+  const filter = (friends, search) => {
+    /* Filter friends based on search */
+    let res = Object.values(friends);
+    search = search.toLowerCase();
 
-    setTimeout(() => setRepeater(prevState => prevState + 1), 10000);
-  }, [repeater]);
+    return res.filter((friend) =>
+      friend.displayname.toLowerCase().includes(search)
+    );
+  };
 
   return (
-    <SafeArea navigation={props.navigation} inverse={true} userInfo={userInfo}>
+    <SafeArea navigation={props.navigation} inverse={true}>
       <View style={styles.head}>
         <View style={styles.searchContainer}>
           <SearchIcon value={search} onChangeText={setSearch} />
         </View>
-        <TouchableOpacity activeOpacity={0.8} onPress={() => {
-          props.navigation.navigate("Requests", requests);
-        }}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            props.navigation.navigate("Requests", requests);
+          }}
+        >
           <View style={styles.requests}>
             <Text style={styles.requestsText}>Requests</Text>
-            {Object.values(requests).length > 0 ? <Text style={styles.new}>{Object.values(requests).length} new</Text> : null}
+            {requests ? (
+              <Text style={styles.new}>
+                {requests.length} new
+              </Text>
+            ) : null}
           </View>
         </TouchableOpacity>
         <H1 style={styles.h1}>Friends</H1>
@@ -67,13 +58,15 @@ const FriendsScreen = (props) => {
         columnWrapperStyle={{ justifyContent: "space-around" }}
         numColumns={3}
         contentContainerStyle={styles.friendList}
-        keyExtractor={(item) => item.uid}
-        data={Object.values(friends).filter((friend) =>
-          friend.displayname.toLowerCase().includes(search.toLowerCase())
-        )}
-        renderItem={(itemData) => (
-          <Friend friend={itemData.item} navigation={props.navigation} />
-        )}
+        keyExtractor={(item, ind) => ind}
+        data={friends ? filter(friends, search) : [null]}
+        renderItem={(itemData) => {
+          if (!itemData.item) return <Text>No chats yet!</Text>;
+          else
+            return (
+              <Friend friend={itemData.item} navigation={props.navigation} />
+            );
+        }}
       />
     </SafeArea>
   );

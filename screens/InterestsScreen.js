@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { H1 } from "../components/Comp";
 
 import SafeArea from "../layouts/GeneralLayout";
 import { Text } from "../components/Comp";
 import Theme from "../const/Colors";
 import Size from "../const/Sizes";
+import { addInterest, removeInterest } from "../store/userReducer";
 
 const Category = (props) => {
   const title = props.title;
@@ -48,53 +49,14 @@ const Sub = (props) => {
 };
 
 const InterestsScreen = (props) => {
-  const uid = useSelector((state) => state.user.value);
-  const [userInterests, setUserInterests] = useState(Array());
+  const uid = useSelector((state) => state.user.data.uid);
+  const userInterests = useSelector((state) => state.user.interests);
   const [interests, setInterests] = useState(Array());
   const [loaded, setLoaded] = useState(false);
-
-  const toggleTag = (title) => {
-    if (userInterests.includes(title)) {
-      fetch("http://api.sharkbait-app.ml/interests/remove", {
-        method: "POST",
-        body: JSON.stringify({
-          uid: uid,
-          interest: title,
-        }),
-        headers: { "Content-Type": "application/json" },
-      }).then((response) => {
-        const newInterests = userInterests.filter((t) => t !== title);
-        setUserInterests(newInterests);
-      });
-    } else {
-      fetch("http://api.sharkbait-app.ml/interests/add", {
-        method: "POST",
-        body: JSON.stringify({
-          uid: uid,
-          interest: title,
-        }),
-        headers: { "Content-Type": "application/json" },
-      }).then((response) => {
-        const newInterests = userInterests.slice();
-        newInterests.push(title);
-        setUserInterests(newInterests);
-      });
-    }
-  };
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    fetch("http://api.sharkbait-app.ml/users/" + uid)
-      .then((json) => json.json())
-      .then((response) => {
-        if (response.error) console.log(response);
-        else {
-          if (!response.interests) setUserInterests(Array());
-          else setUserInterests(response.interests);
-        }
-      });
-  }, []);
-
-  useEffect(() => {
+    /* Get all the interests from the database */
     fetch("http://api.sharkbait-app.ml/interests")
       .then((json) => json.json())
       .then((response) => {
@@ -103,7 +65,21 @@ const InterestsScreen = (props) => {
       });
   }, []);
 
+  const toggleTag = (title) => {
+    /* Toggle user's interest based on what they select */
+    if (userInterests && userInterests.includes(title)) {
+      //remove interest
+      console.log("Removing", title);
+      dispatch(removeInterest({ uid: uid, interest: title }));
+    } else {
+      //add interest
+      console.log("Adding", title);
+      dispatch(addInterest({ uid: uid, interest: title }));
+    }
+  };
+
   const formatInterests = (allInterests) => {
+    /* Organize interests data brought from database to fit the structure */
     let result = {};
     let category;
     let subcategory;
@@ -143,7 +119,7 @@ const InterestsScreen = (props) => {
                     <Sub
                       key={ind}
                       title={sub}
-                      interested={userInterests.includes(sub)}
+                      interested={userInterests && userInterests.includes(sub)}
                       onPress={toggleTag}
                     />
                   ))}
@@ -198,7 +174,7 @@ const styles = StyleSheet.create({
   },
 
   notag: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1,
     borderColor: Theme.accent,
     alignSelf: "flex-start",

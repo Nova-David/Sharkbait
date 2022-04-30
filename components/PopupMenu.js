@@ -2,13 +2,13 @@ import React, { useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
+import { useSelector } from "react-redux";
 
 import Theme from "../const/Colors";
 import { HR, Text } from "./Comp";
 
 const PopupMenu = (props) => {
-  const user = props.userInfo;
-  const interests = user.interests;
+  const { data: user, interests } = useSelector((state) => state.user);
 
   const randomHandler = () => {
     if (interests) {
@@ -32,8 +32,8 @@ const PopupMenu = (props) => {
 
               if (
                 percentage >= 0.65 &&
-                data[key].friends &&
-                !data[key].friends.includes(user.uid) &&
+                (!data[key].friends ||
+                !data[key].friends.includes(user.uid)) &&
                 data[key].uid !== user.uid
               ) {
                 possibleUsers.push(data[key]);
@@ -49,7 +49,7 @@ const PopupMenu = (props) => {
               position: "bottom",
               bottomOffset: 100,
             });
-          
+
           const ind = Math.floor(Math.random() * possibleUsers.length);
           props.close();
           props.navigation.navigate("Profile", possibleUsers[ind]);

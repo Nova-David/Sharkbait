@@ -13,7 +13,7 @@ const SearchScreen = (props) => {
   const [notFound, setNotFound] = useState(false);
 
   const searchHandler = () => {
-    console.log(user);
+    /* Find user typed in text input, navigate to their profile if found */
     if (user != "") {
       fetch("http://api.sharkbait-app.ml/users/" + user.toLowerCase())
         .then((json) => json.json())

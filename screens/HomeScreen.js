@@ -7,97 +7,43 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useSelector } from "react-redux";
-import { io } from "socket.io-client";
 
 import SafeArea from "../layouts/HomeLayout";
-import { Text, H1, Input } from "../components/Comp";
+import { Text, H1 } from "../components/Comp";
 import Chat from "../components/Chat";
-import DUMMY_DATA from "../data/DUMMY_DATA";
 import SearchIcon from "../components/SearchIcon";
-
 
 const HomeScreen = (props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
+  const { data: user, chats } = useSelector((state) => state.user);
+
   const [search, setSearch] = useState("");
-  const [chats, setChats] = useState(Array());
-  const [loaded, setLoaded] = useState(false);
-  const [userInfo, setUserInfo] = useState();
-  const uid = useSelector((state) => state.user.value);
-  const socketRef = useRef();
-
-  useEffect(() => {
-    fetch("http://api.sharkbait-app.ml/users/" + uid)
-      .then(json => json.json())
-      .then(response => {
-        setUserInfo(response);
-      })
-  }, [])
-
-  useEffect(() => {
-    if (!loaded) {
-      fetch("http://api.sharkbait-app.ml/users/" + uid + "/chats")
-        .then((json) => json.json())
-        .then((response) => {
-          if (response.error) console.log(error);
-          else if (response.length > 0) {
-            sortChats(response);
-            setLoaded(true);
-          } else {
-            sortChats(Array());
-            setLoaded(true);
-          }
-        });
-    }
-  }, []);
-
-  useEffect(() => {
-    const socket = io("http://sharkbait-app.ml");
-
-    socket.on("connect", () => {
-      socket.emit('userConnection', uid);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("disconnected");
-    });
-
-    socketRef.current = socket;
-    
-    return () => {
-      socket.removeAllListeners();
-      socket.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if(socketRef.current) {
-      socketRef.current.on("chatUpdate", (chat, who) => {
-        updateChats(chat);
-      });
-    }
-
-  }, [socketRef.current])
 
   const sortChats = (chats) => {
-    chats.sort((a, b) => new Date(b.last_update) - new Date(a.last_update));
-    setChats(chats);
+    /* Sort chats by latest message sent */
+    return chats.sort(
+      (a, b) => new Date(b.last_update) - new Date(a.last_update)
+    );
   };
 
-  const updateChats = (chat) => {
-    var currChats = chats;
-    for (let i = 0; i < currChats.length; i++) {
-      if (currChats[i].chat_id == chat.chat_id) {
-        currChats.splice(i, 1);
-        break;
-      }
-    }
+  const organize = (chats, search) => {
+    /* Filter chats based on search and then sort by latest message */
+    let res = Object.values(chats);
+    search = search.toLowerCase();
 
-    currChats.unshift(chat);
-    setChats(currChats);
-  }
+    res = res.filter((chat) => {
+      if (chat.title) return chat.title.toLowerCase().includes(search);
+
+      return chat.members.filter((member) =>
+        member.displayname.toLowerCase().includes(search)
+      ).length > 0;
+    });
+
+    return sortChats(res);
+  };
 
   return (
-    <SafeArea navigation={props.navigation} userInfo={userInfo}>
+    <SafeArea navigation={props.navigation}>
       <View style={styles.head}>
         <View style={styles.searchContainer}>
           <SearchIcon value={search} onChangeText={setSearch} />
@@ -110,22 +56,24 @@ const HomeScreen = (props) => {
           { useNativeDriver: true }
         )}
         contentContainerStyle={styles.chatList}
-        keyExtractor={(item) => Math.random().toString()}
-        data={chats.filter((chat) =>
-          chat.members
-            .map((member) => member.displayname)
-            .toString()
-            .toLowerCase()
-            .includes(search.toLowerCase())
-        )}
-        renderItem={(itemData) => (
-          <Chat
-            {...props}
-            data={itemData.item}
-            scrollY={scrollY}
-            index={itemData.index}
-          />
-        )}
+        keyExtractor={(item, ind) => ind}
+        data={
+          chats
+            ? organize(chats, search)
+            : [null]
+        }
+        renderItem={(itemData) => {
+          if (!itemData.item) return <Text></Text>;
+          else
+            return (
+              <Chat
+                navigation={props.navigation}
+                chat={itemData.item.chat_id}
+                scrollY={scrollY}
+                index={itemData.index}
+              />
+            );
+        }}
       />
     </SafeArea>
   );
@@ -145,15 +93,9 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
 
-  searchInput: {
-    // fontSize: Size.small,
-    // paddingVertical: 5,
-  },
-
   chatList: {
     paddingHorizontal: 20,
     paddingBottom: 210,
-    // paddingTop: 20
   },
 });
 

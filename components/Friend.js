@@ -19,7 +19,7 @@ const Friend = (props) => {
         activeOpacity={0.8}
         onPress={friendPressHandler}
       >
-        <View>
+        <View style={{alignItems: "center"}}>
           <Avatar style={styles.avatar} />
           <Text style={styles.name}>{props.friend.displayname}</Text>
           <Text style={styles.username}>@{props.friend.uid}</Text>
@@ -35,7 +35,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     alignItems: "flex-start",
     flexDirection: "column",
-    // backgroundColor: 'red',
     // flex: 1,
   },
 

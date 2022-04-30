@@ -12,6 +12,7 @@ import { login } from "../store/userReducer";
 const initialProps = { value: "", valid: false };
 
 const RegisterScreen = (props) => {
+  /* Keeps track of all inputs */
   const [inputState, setInputState] = useState({
     username: initialProps,
     displayname: initialProps,
@@ -59,8 +60,8 @@ const RegisterScreen = (props) => {
 
   const errorHandler = (msg) => {
     //Error here
-    console.log(msg)
-  }
+    console.log(msg);
+  };
 
   const registerHandler = () => {
     /* Register */
@@ -75,12 +76,17 @@ const RegisterScreen = (props) => {
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then((json) => {
-        return json.json();
-      }).then(response => {
-        if (response.success) dispatch(login(username.value));
-        else errorHandler(response.error);
-      });
+      })
+        .then((json) => {
+          return json.json();
+        })
+        .then((response) => {
+          if (response.success) {
+            dispatch(
+              login({ uid: data.uid.toLowerCase(), password: data.password })
+            );
+          } else errorHandler(response.error);
+        });
     } else console.log("Not valid yet");
   };
 

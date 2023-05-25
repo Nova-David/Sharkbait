@@ -4,7 +4,7 @@
 
 <div align="center">
   <p>
-    <img src="assets/msgloop.gif" height="600px" align="center" alt="Screenshot" />
+    <img src="assets/msg.gif" height="600px" align="center" alt="Screenshot" />
     <br>
     <em>Real time communication app made <br>for Android and iOS</em>
   </p>

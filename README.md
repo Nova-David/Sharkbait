@@ -4,7 +4,7 @@
 
 <div align="center">
   <p>
-    <img src="" height="80px" align="center" alt="Screenshot" />
+    <img src="assets/msgloop.gif" height="600px" align="center" alt="Screenshot" />
     <br>
     <em>Real time communication app made <br>for Android and iOS</em>
   </p>
@@ -14,5 +14,22 @@
 
 <details>
     <summary>User System</summary>
-    <p>Test.</p>
+    <p>TBD</p>
+</details>
+
+<details>
+    <summary>Friend System</summary>
+    <p>TBD</p>
+</details>
+<details>
+    <summary>Instant Messaging</summary>
+    <p>TBD</p>
+</details>
+<details>
+    <summary>Profiles</summary>
+    <p>TBD</p>
+</details>
+<details>
+    <summary>Interests</summary>
+    <p>TBD</p>
 </details>

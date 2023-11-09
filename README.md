@@ -32,7 +32,7 @@
     <br>
     <div align="center">
         <img src="assets/incoming.png" style="border-radius:10px; vertical-align: top" height="200px" align="center" alt="Screenshot" />
-        <img src="assets/friends.png" style="border-radius:10px" height="600px" align="center" alt="Screenshot" />
+        <img src="assets/friends_sc.png" style="border-radius:10px" height="600px" align="center" alt="Screenshot" />
     </div>
     <br>
     <p>The friend system allows any user to send a friend request to another user. Incoming requests can be seen from within the friends tab and there they
